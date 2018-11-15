@@ -3,7 +3,6 @@ import { Image, Dimensions, CameraRoll, Modal, StyleSheet, Text, View, Platform,
 import PropTypes from 'prop-types';
 import Toast from 'react-native-root-toast';
 import ImageViewer from 'react-native-image-zoom-viewer';
-import { CustomCachedImage } from 'react-native-img-cache';
 import { InnerNaviBar, getSafeAreaInset, DEFAULT_NAVBAR_HEIGHT } from 'react-native-pure-navigation-bar';
 
 export default class extends React.PureComponent {
@@ -139,9 +138,7 @@ export default class extends React.PureComponent {
 
     _renderViewForImage = (props) => {
         return (
-            <CustomCachedImage
-                component={Image}
-                mutable={false}
+            <Image
                 resizeMode='contain'
                 {...props}
             />
