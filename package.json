@@ -1,24 +1,26 @@
 {
-    "name": "react-native-photo-browse",
-    "version": "1.0.1",
-    "private": false,
-    "description": "A browser page for multiple local or remote photos.",
-    "main": "index.js",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/gaoxiaosong/react-native-photo-browse.git"
-    },
-    "author": "Xiaosong Gao",
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/gaoxiaosong/react-native-photo-browse/issues",
-        "email": "gaoxiaosong06@gmail.com"
-    },
-    "homepage": "https://github.com/gaoxiaosong/react-native-photo-browse#readme",
-    "dependencies": {
-        "react-native-image-zoom-viewer": "^2.2.23",
-        "react-native-pure-navigation-bar": "^1.4.6",
-        "react-native-root-siblings": "^3.1.6",
-        "react-native-root-toast": "^3.0.1"
-    }
+  "name": "react-native-photo-browse",
+  "version": "1.0.1",
+  "private": false,
+  "description": "A browser page for multiple local or remote photos.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gaoxiaosong/react-native-photo-browse.git"
+  },
+  "author": "Xiaosong Gao",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gaoxiaosong/react-native-photo-browse/issues",
+    "email": "gaoxiaosong06@gmail.com"
+  },
+  "homepage": "https://github.com/gaoxiaosong/react-native-photo-browse#readme",
+  "dependencies": {
+    "react-native-image-zoom-viewer": "^2.2.23",
+    "react-native-pure-navigation-bar": "^1.4.6",
+    "react-native-root-siblings": "^3.1.6",
+    "react-native-root-toast": "^3.0.1",
+    "react-native-progress": "^3.5.0",
+    "react-native-fs": "^2.13.3"
+  }
 }
