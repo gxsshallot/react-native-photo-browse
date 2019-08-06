@@ -61,9 +61,9 @@ func = () => {
 | supportedOrientations | Orientations supported for Modal |
 | successDownloadText | DownLoad and Save success tips  |
 | cancelDownloadText | cancel DownLoad  tips |
-| clickdButtonIcon | clickdButton IconFont |
-| unClickdButtonIcon | unClickdButton IconFont |
-| closeIcon | stop download IconFont |
+| clickdButtonIcon | clickdButton element |
+| unClickdButtonIcon | unClickdButton element |
+| closeIcon | stop download element |
 
 ## Global Settings
 
