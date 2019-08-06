@@ -54,15 +54,16 @@ func = () => {
 | failImage | A placeholder image when image is invalid |
 | currentIndex | Initial index of image to show. Default is 0 |
 | canDelete | Enable or disable delete button. Default is false |
-| canSave | Enable or disable save button. Default is false |
 | okLabel | Label of OK button |
 | deleteLabel | Label of Delete button |
-| saveLabel | Label of Save button |
-| saveSuccessText | Save success tips |
-| saveFailureText | Save failure tips |
 | loadingText | Loading tips |
 | onClose | Callback method when close |
 | supportedOrientations | Orientations supported for Modal |
+| successDownloadText | DownLoad and Save success tips  |
+| cancelDownloadText | cancel DownLoad  tips |
+| clickdButtonIcon | clickdButton IconFont |
+| unClickdButtonIcon | unClickdButton IconFont |
+| closeIcon | stop download IconFont |
 
 ## Global Settings
 
