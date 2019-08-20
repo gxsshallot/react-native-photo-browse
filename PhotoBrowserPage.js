@@ -32,7 +32,10 @@ export default class extends React.PureComponent {
         cancelDownloadText: PropTypes.string,
         clickdButtonIcon: PropTypes.func,
         unClickdButtonIcon: PropTypes.func,
-        closeIcon: PropTypes.func
+        closeIcon: PropTypes.func,
+        startDownload: PropTypes.func,
+        removeThumbnailParam: PropTypes.func,
+        cancelDownload: PropTypes.func
     };
 
     static defaultProps = {
@@ -52,7 +55,10 @@ export default class extends React.PureComponent {
         cancelDownloadText: '下载已取消',
         clickdButtonIcon: () => null,
         unClickdButtonIcon: () => null,
-        closeIcon: () => null
+        closeIcon: () => null,
+        startDownload: () => null,
+        removeThumbnailParam: (url) => url,
+        cancelDownload: () => null
     };
 
     constructor(props) {
@@ -61,9 +67,9 @@ export default class extends React.PureComponent {
         this.state = {
             dataSource: [...props.images],
             onProgressNum: 0,
-            jobId: 0,
             path: '',
-            showToast: ''
+            showToast: '',
+            hasCancel: false
         };
     }
 
@@ -151,9 +157,18 @@ export default class extends React.PureComponent {
         {this.props.canDownload && this.state.isDownloading &&  this._renderDownloadProgress()}
         {this.props.canDownload && this._renderDownloadButton()}
         {this.state.showToast != '' && this._renderToast()}
+        {this.props.canDownload && this.state.isDownloading && this._renderCannotTouch()}
     </View>
     );
     };
+
+    _renderCannotTouch = () => {
+        return (
+            <View style={[styles.cannotTouch]}>
+
+            </View>
+    );
+    }
 
     _renderViewForImage = (props) => {
         return (
@@ -255,7 +270,7 @@ export default class extends React.PureComponent {
     _renderDownloadButton = () => {
         const { clickdButtonIcon, unClickdButtonIcon} = this.props;
         return (
-            <TouchableOpacity  style={styles.downloadButton} onPress={!this.state.isDownloading && this._startDownload }>
+            <TouchableOpacity  style={styles.downloadButton} onPress={() => this._downLoadFile()}>
     <View>
         {this.state.isDownloading ? unClickdButtonIcon : clickdButtonIcon}
         </View>
@@ -263,27 +278,35 @@ export default class extends React.PureComponent {
     );
     };
 
-    _startDownload = () => {
+    _downLoadFile = () => {
         const { images } = this.props;
         const url = images[this.currentIndex];
-        const index = url.lastIndexOf('/');
-        const saveName = url.substring(index+1,url.length);
+        const noThrumbnailParUrl = this.props.removeThumbnailParam(url);
+        if(noThrumbnailParUrl === undefined){
+            return;
+        }
+        const index = noThrumbnailParUrl.lastIndexOf('/');
+        const saveName = noThrumbnailParUrl.substring(index+1,noThrumbnailParUrl.length);
         const path = RNFS.DocumentDirectoryPath + '/' + saveName;
-        const progress = data => {
-            const percentage = 100 * data.bytesWritten / data.contentLength | 0;
-            this.setState({
-                onProgressNum: percentage,
-                jobId : data.jobId
-            })
-            percentage === 100 && this._onFinishDownload(path);
-        };
-        const progressDivider = 1;
-        RNFS.downloadFile({fromUrl: url, toFile: path, progress, progressDivider});
         this.setState({
             isDownloading: true,
-            path: path
+            path: path,
+            hasCancel: false
         })
-    };
+        this.props.startDownload(url,path,(progress) => {
+            this.setState({
+                onProgressNum: progress,
+            })
+        },(res) => {
+            !this.state.hasCancel && this._onFinishDownload(path);
+        },() => { //下载失败
+            this.setState({
+                isDownloading: false,
+                onProgressNum: 0
+            });
+        });
+    }
+
 
     _onFinishDownload = (path) => {
         this.setState({
@@ -301,12 +324,15 @@ export default class extends React.PureComponent {
         this.setState({
             isDownloading: false,
             onProgressNum: 0,
-            showToast: this.props.cancelDownloadText
+            showToast: this.props.cancelDownloadText,
+            hasCancel: true
         });
-        RNFS.stopDownload(this.state.jobId);
+        // RNFS.stopDownload(this.state.jobId);
         RNFS.unlink(this.state.path);
         Toast.show(this.props.stopDownload);
     };
+
+
 
     _getCenterStyle = () => {
         const {width, height} = Dimensions.get('window');
@@ -357,6 +383,9 @@ export default class extends React.PureComponent {
     }
 }
 
+const screenWidth = Dimensions.get('window').width;
+const screenHeight = Dimensions.get('window').height;
+
 const styles = StyleSheet.create({
     indicator: {
         position: 'absolute',
@@ -388,6 +417,7 @@ const styles = StyleSheet.create({
         height: 100,
         justifyContent: 'center',
         alignItems: 'center',
+        zIndex: 100,
     },
     downloadProgress: {
         position: 'absolute',
@@ -407,15 +437,21 @@ const styles = StyleSheet.create({
     },
     downloadButton: {
         position: 'absolute',
-        bottom: 16,
+        bottom: 50,
         right: 0,
         width: 100,
-        height: 100,
+        height: 20,
         justifyContent: 'center',
         alignItems: 'center',
     },
     progressText: {
         color: '#000'
+    },
+    cannotTouch: {
+        position: 'absolute',
+        zIndex: 99,
+        width: screenWidth,
+        height: screenHeight
     },
 
 });
