@@ -64,6 +64,7 @@ func = () => {
 | clickdButtonIcon | clickdButton element |
 | unClickdButtonIcon | unClickdButton element |
 | closeIcon | stop download element |
+| startDownload | to download picture |
 
 ## Global Settings
 
