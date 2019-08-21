@@ -32,7 +32,9 @@ export default class extends React.PureComponent {
         cancelDownloadText: PropTypes.string,
         clickdButtonIcon: PropTypes.func,
         unClickdButtonIcon: PropTypes.func,
-        closeIcon: PropTypes.func
+        closeIcon: PropTypes.func,
+        startDownload: PropTypes.func,
+        cancelDownload: PropTypes.func
     };
 
     static defaultProps = {
@@ -52,7 +54,9 @@ export default class extends React.PureComponent {
         cancelDownloadText: '下载已取消',
         clickdButtonIcon: () => null,
         unClickdButtonIcon: () => null,
-        closeIcon: () => null
+        closeIcon: () => null,
+        startDownload: () => null,
+        cancelDownload: () => null
     };
 
     constructor(props) {
@@ -61,9 +65,8 @@ export default class extends React.PureComponent {
         this.state = {
             dataSource: [...props.images],
             onProgressNum: 0,
-            jobId: 0,
-            path: '',
-            showToast: ''
+            showToast: '',
+            hasCancel: false
         };
     }
 
@@ -79,15 +82,15 @@ export default class extends React.PureComponent {
         const { onClose, supportedOrientations } = this.props;
         return (
             <Modal
-        transparent={true}
-        animationType='fade'
-        onRequestClose={onClose}
-        supportedOrientations={supportedOrientations}
+                transparent={true}
+                animationType='fade'
+                onRequestClose={onClose}
+                supportedOrientations={supportedOrientations}
             >
-            {this._renderNaviBar()}
-        {this._renderImageView()}
-    </Modal>
-    );
+                {this._renderNaviBar()}
+                {this._renderImageView()}
+            </Modal>
+        );
     }
 
     _renderNaviBar = () => {
@@ -114,16 +117,16 @@ export default class extends React.PureComponent {
         }
         return (
             <InnerNaviBar
-        style={{
-            safeView: {
-                backgroundColor: 'black',
-            },
-        }}
-        onLeft={() => {this.props.onClose(); return false;}}
-        hasSeperatorLine={false}
-        {...rights}
-        />
-    );
+                style={{
+                    safeView: {
+                        backgroundColor: 'black',
+                    },
+                }}
+                onLeft={() => {this.props.onClose(); return false;}}
+                hasSeperatorLine={false}
+                {...rights}
+            />
+        );
     };
 
     _renderImageView = () => {
@@ -138,50 +141,59 @@ export default class extends React.PureComponent {
         };
         return (
             <View style={style}>
-            <ImageViewer
-        index={this.currentIndex}
-        failImageSource={failImage}
-        imageUrls={images.map(url => ({url}))}
-        loadingRender={this._renderLoading}
-        renderImage={this._renderViewForImage}
-        renderIndicator={this._renderIndicator}
-        onChange={this._onChangeIndex}
-        />
-        {this.props.canDownload && this.state.isDownloading && this._renderDownloadClose()}
-        {this.props.canDownload && this.state.isDownloading &&  this._renderDownloadProgress()}
-        {this.props.canDownload && this._renderDownloadButton()}
-        {this.state.showToast != '' && this._renderToast()}
-    </View>
-    );
+                <ImageViewer
+                    index={this.currentIndex}
+                    failImageSource={failImage}
+                    imageUrls={images.map(url => ({url}))}
+                    loadingRender={this._renderLoading}
+                    renderImage={this._renderViewForImage}
+                    renderIndicator={this._renderIndicator}
+                    onChange={this._onChangeIndex}
+                />
+                {this.props.canDownload && this.state.isDownloading && this._renderDownloadClose()}
+                {this.props.canDownload && this.state.isDownloading &&  this._renderDownloadProgress()}
+                {this.props.canDownload && this._renderDownloadButton()}
+                {this.state.showToast != '' && this._renderToast()}
+                {this.props.canDownload && this.state.isDownloading && this._renderCannotTouch()}
+            </View>
+        );
     };
+
+    _renderCannotTouch = () => {
+        return (
+            <View style={[styles.cannotTouch]}>
+
+            </View>
+        );
+    }
 
     _renderViewForImage = (props) => {
         return (
             <Image
-        resizeMode='contain'
-        {...props}
-        />
-    );
+                resizeMode='contain'
+                {...props}
+            />
+        );
     };
 
     _renderIndicator = (index, size) => {
         return (
             <Text style={styles.indicator}>
-            {index + '/' + size}
+                {index + '/' + size}
             </Text>
-    );
+        );
     };
 
     _renderLoading = () => {
         const style = this._getCenterStyle();
         return (
             <View style={[styles.container, style]}>
-    <ActivityIndicator color='white' size='large' />
-            <Text style={styles.toast}>
-            {this.props.loadingText}
-            </Text>
+                <ActivityIndicator color='white' size='large' />
+                <Text style={styles.toast}>
+                    {this.props.loadingText}
+                </Text>
             </View>
-    );
+        );
     };
 
     _clickOk = () => {
@@ -219,25 +231,25 @@ export default class extends React.PureComponent {
         const {onProgressNum} = this.state;
         return (
             <View style={[styles.downloadProgress, style]}>
-    <Circle
-        style={{
-            borderRadius: 42,
-                width: 84,
-                height: 84
-        }}
-        size={84} // 圆的直径
-        progress={onProgressNum * 0.01} // 进度
-        unfilledColor="rgba(255,255,255,0.5)" // 剩余进度的颜色
-        color={"#008aff"} // 颜色
-        thickness={6} // 内圆厚度
-        direction="clockwise" // 方向
-        borderWidth={0} // 边框
-        showsText={true}
-        formatText={() => `${onProgressNum}%`}
-        textStyle={styles.progressText}
-        />
-        </View>
-    );
+                <Circle
+                    style={{
+                        borderRadius: 42,
+                        width: 84,
+                        height: 84
+                    }}
+                    size={84} // 圆的直径
+                    progress={onProgressNum * 0.01} // 进度
+                    unfilledColor="rgba(255,255,255,0.5)" // 剩余进度的颜色
+                    color={"#008aff"} // 颜色
+                    thickness={6} // 内圆厚度
+                    direction="clockwise" // 方向
+                    borderWidth={0} // 边框
+                    showsText={true}
+                    formatText={() => `${onProgressNum}%`}
+                    textStyle={styles.progressText}
+                />
+            </View>
+        );
     };
 
 
@@ -245,45 +257,45 @@ export default class extends React.PureComponent {
         const {closeIcon} = this.props;
         return (
             <TouchableOpacity  style={styles.downloadClose} onPress={this._stopDownload }>
-            <View >
-            {closeIcon}
-            </View>
+                <View >
+                    {closeIcon}
+                </View>
             </TouchableOpacity>
-    );
+        );
     };
 
     _renderDownloadButton = () => {
         const { clickdButtonIcon, unClickdButtonIcon} = this.props;
         return (
-            <TouchableOpacity  style={styles.downloadButton} onPress={!this.state.isDownloading && this._startDownload }>
-    <View>
-        {this.state.isDownloading ? unClickdButtonIcon : clickdButtonIcon}
-        </View>
-        </TouchableOpacity>
-    );
+            <TouchableOpacity  style={styles.downloadButton} onPress={() => this._downLoadFile()}>
+                <View>
+                    {this.state.isDownloading ? unClickdButtonIcon : clickdButtonIcon}
+                </View>
+            </TouchableOpacity>
+        );
     };
 
-    _startDownload = () => {
+    _downLoadFile = () => {
         const { images } = this.props;
         const url = images[this.currentIndex];
-        const index = url.lastIndexOf('/');
-        const saveName = url.substring(index+1,url.length);
-        const path = RNFS.DocumentDirectoryPath + '/' + saveName;
-        const progress = data => {
-            const percentage = 100 * data.bytesWritten / data.contentLength | 0;
-            this.setState({
-                onProgressNum: percentage,
-                jobId : data.jobId
-            })
-            percentage === 100 && this._onFinishDownload(path);
-        };
-        const progressDivider = 1;
-        RNFS.downloadFile({fromUrl: url, toFile: path, progress, progressDivider});
         this.setState({
             isDownloading: true,
-            path: path
+            hasCancel: false
         })
-    };
+        this.props.startDownload(url,(progress) => {
+            this.setState({
+                onProgressNum: progress,
+            })
+        },(res,path) => {
+            !this.state.hasCancel && this._onFinishDownload(path);
+        },() => { //下载失败
+            this.setState({
+                isDownloading: false,
+                onProgressNum: 0
+            });
+        });
+    }
+
 
     _onFinishDownload = (path) => {
         this.setState({
@@ -301,12 +313,15 @@ export default class extends React.PureComponent {
         this.setState({
             isDownloading: false,
             onProgressNum: 0,
-            showToast: this.props.cancelDownloadText
+            showToast: this.props.cancelDownloadText,
+            hasCancel: true
         });
-        RNFS.stopDownload(this.state.jobId);
-        RNFS.unlink(this.state.path);
+        // RNFS.stopDownload(this.state.jobId);
+        // RNFS.unlink(this.state.path);
         Toast.show(this.props.stopDownload);
     };
+
+
 
     _getCenterStyle = () => {
         const {width, height} = Dimensions.get('window');
@@ -343,9 +358,9 @@ export default class extends React.PureComponent {
         const style = this._getToastCenterStyle();
         return (
             <View style={[styles.toastView, style]}>
-    <Text style={styles.toastText}>{this.state.showToast}</Text>
+                <Text style={styles.toastText}>{this.state.showToast}</Text>
             </View>
-    );
+        );
     };
 
     _startTime = () => {
@@ -356,6 +371,9 @@ export default class extends React.PureComponent {
         },1000);
     }
 }
+
+const screenWidth = Dimensions.get('window').width;
+const screenHeight = Dimensions.get('window').height;
 
 const styles = StyleSheet.create({
     indicator: {
@@ -388,6 +406,7 @@ const styles = StyleSheet.create({
         height: 100,
         justifyContent: 'center',
         alignItems: 'center',
+        zIndex: 100,
     },
     downloadProgress: {
         position: 'absolute',
@@ -407,15 +426,21 @@ const styles = StyleSheet.create({
     },
     downloadButton: {
         position: 'absolute',
-        bottom: 16,
+        bottom: 50,
         right: 0,
         width: 100,
-        height: 100,
+        height: 20,
         justifyContent: 'center',
         alignItems: 'center',
     },
     progressText: {
         color: '#000'
+    },
+    cannotTouch: {
+        position: 'absolute',
+        zIndex: 99,
+        width: screenWidth,
+        height: screenHeight
     },
 
 });
