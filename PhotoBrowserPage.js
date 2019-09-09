@@ -152,7 +152,7 @@ export default class extends React.PureComponent {
                 />
                 {this.props.canDownload && this.state.isDownloading && this._renderDownloadClose()}
                 {this.props.canDownload && this.state.isDownloading &&  this._renderDownloadProgress()}
-                {this.props.canDownload && this._renderDownloadButton()}
+                {/*{this.props.canDownload && this._renderDownloadButton()}*/}
                 {this.state.showToast != '' && this._renderToast()}
                 {this.props.canDownload && this.state.isDownloading && this._renderCannotTouch()}
             </View>
@@ -176,11 +176,15 @@ export default class extends React.PureComponent {
         );
     };
 
+
     _renderIndicator = (index, size) => {
         return (
-            <Text style={styles.indicator}>
-                {index + '/' + size}
-            </Text>
+            <View>
+                <Text style={styles.indicator}>
+                    {index + '/' + size}
+                </Text>
+                {this.props.canDownload && this._renderDownloadButton()}
+            </View>
         );
     };
 
@@ -263,6 +267,7 @@ export default class extends React.PureComponent {
             </TouchableOpacity>
         );
     };
+
 
     _renderDownloadButton = () => {
         const { clickdButtonIcon, unClickdButtonIcon} = this.props;
@@ -426,7 +431,7 @@ const styles = StyleSheet.create({
     },
     downloadButton: {
         position: 'absolute',
-        bottom: 50,
+        bottom: 15,
         right: 0,
         width: 100,
         height: 20,
