@@ -53,9 +53,6 @@ func = () => {
 | images | Image urls array to show |
 | failImage | A placeholder image when image is invalid |
 | currentIndex | Initial index of image to show. Default is 0 |
-| canDelete | Enable or disable delete button. Default is false |
-| okLabel | Label of OK button |
-| deleteLabel | Label of Delete button |
 | loadingText | Loading tips |
 | onClose | Callback method when close |
 | supportedOrientations | Orientations supported for Modal |

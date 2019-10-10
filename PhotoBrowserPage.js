@@ -1,9 +1,8 @@
 import React from 'react';
-import { Image, Dimensions, CameraRoll, Modal, StyleSheet, Text, View, Platform, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, CameraRoll, Dimensions, Image, Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import PropTypes from 'prop-types';
 import Toast from 'react-native-root-toast';
 import ImageViewer from 'react-native-image-zoom-viewer';
-import { InnerNaviBar, getSafeAreaInset, DEFAULT_NAVBAR_HEIGHT } from 'react-native-pure-navigation-bar';
 import { Circle } from 'react-native-progress';
 import RNFS from 'react-native-fs';
 
@@ -16,45 +15,29 @@ export default class extends React.PureComponent {
             PropTypes.shape({uri: PropTypes.string.isRequired})
         ]),
         currentIndex: PropTypes.number,
-        canDelete: PropTypes.bool,
-        canSave: PropTypes.bool,
-        okLabel: PropTypes.string,
-        deleteLabel: PropTypes.string,
-        saveLabel: PropTypes.string,
-        saveSuccessText: PropTypes.string,
-        saveFailureText: PropTypes.string,
         loadingText: PropTypes.string,
         onClose: PropTypes.func,
         supportedOrientations: PropTypes.array,
         canDownload: PropTypes.bool,
-        isDownloading: PropTypes.bool,
         successDownloadText: PropTypes.string,
         cancelDownloadText: PropTypes.string,
-        clickdButtonIcon: PropTypes.func,
-        unClickdButtonIcon: PropTypes.func,
-        closeIcon: PropTypes.func,
+        clickdButtonIcon: PropTypes.node,
+        unClickdButtonIcon: PropTypes.node,
+        closeIcon: PropTypes.node,
         startDownload: PropTypes.func,
         cancelDownload: PropTypes.func
     };
 
     static defaultProps = {
         currentIndex: 0,
-        canDelete: false,
-        canSave: false,
-        okLabel: 'OK',
-        deleteLabel: 'Delete',
-        saveLabel: 'Save',
-        saveSuccessText: 'Succeed',
-        saveFailureText: 'Failure',
         loadingText: 'Waiting...',
         supportedOrientations: ["portrait", "landscape"],
-        isDownloading: false,
         canDownload: true,
         successDownloadText: '已保存至相册',
         cancelDownloadText: '下载已取消',
-        clickdButtonIcon: () => null,
-        unClickdButtonIcon: () => null,
-        closeIcon: () => null,
+        clickdButtonIcon: null,
+        unClickdButtonIcon: null,
+        closeIcon: null,
         startDownload: () => null,
         cancelDownload: () => null
     };
@@ -79,7 +62,7 @@ export default class extends React.PureComponent {
     }
 
     render() {
-        const { onClose, supportedOrientations } = this.props;
+        const {onClose, supportedOrientations, failImage, images, renderIndicator} = this.props;
         return (
             <Modal
                 transparent={true}
@@ -87,85 +70,34 @@ export default class extends React.PureComponent {
                 onRequestClose={onClose}
                 supportedOrientations={supportedOrientations}
             >
-                {this._renderNaviBar()}
-                {this._renderImageView()}
+                <View style={styles.layout}>
+                    <ImageViewer
+                        index={this.currentIndex}
+                        failImageSource={failImage}
+                        imageUrls={images.map(url => ({url}))}
+                        loadingRender={this._renderLoading}
+                        renderImage={this._renderViewForImage}
+                        renderIndicator={renderIndicator || this._renderIndicator}
+                        onChange={this._onChangeIndex}
+                        onCancel={onClose}
+                        enableSwipeDown={true}
+                    />
+                    {this.props.canDownload && this._renderDownloadButton()}
+                    {this.props.canDownload && this.state.isDownloading && this._renderDownloadClose()}
+                    {this.props.canDownload && this.state.isDownloading && this._renderDownloadProgress()}
+                    {this.state.showToast !== '' && this._renderToast()}
+                    {this.props.canDownload && this.state.isDownloading && this._renderCannotTouch()}
+                </View>
             </Modal>
         );
     }
 
-    _renderNaviBar = () => {
-        const { canDelete } = this.props;
-        const items = [];
-        if (canDelete) {
-            items.push({
-                text: this.props.okLabel,
-                onPress: this._clickOk,
-            });
-            items.push({
-                text: this.props.deleteLabel,
-                onPress: this._clickDelete,
-            });
-        }
-
-        const rights = {};
-        if (items.length > 0) {
-            rights.rightElement = items.map(item => item.text);
-            rights.onRight = (index) => {
-                const item = items[index];
-                item.onPress();
-            };
-        }
-        return (
-            <InnerNaviBar
-                style={{
-                    safeView: {
-                        backgroundColor: 'black',
-                    },
-                }}
-                onLeft={() => {this.props.onClose(); return false;}}
-                hasSeperatorLine={false}
-                {...rights}
-            />
-        );
-    };
-
-    _renderImageView = () => {
-        const { failImage, images } = this.props;
-        const inset = getSafeAreaInset();
-        const style = {
-            flex: 1,
-            backgroundColor: 'black',
-            paddingLeft: inset.left,
-            paddingRight: inset.right,
-            paddingBottom: inset.bottom,
-        };
-        return (
-            <View style={style}>
-                <ImageViewer
-                    index={this.currentIndex}
-                    failImageSource={failImage}
-                    imageUrls={images.map(url => ({url}))}
-                    loadingRender={this._renderLoading}
-                    renderImage={this._renderViewForImage}
-                    renderIndicator={this._renderIndicator}
-                    onChange={this._onChangeIndex}
-                />
-                {this.props.canDownload && this.state.isDownloading && this._renderDownloadClose()}
-                {this.props.canDownload && this.state.isDownloading &&  this._renderDownloadProgress()}
-                {/*{this.props.canDownload && this._renderDownloadButton()}*/}
-                {this.state.showToast != '' && this._renderToast()}
-                {this.props.canDownload && this.state.isDownloading && this._renderCannotTouch()}
-            </View>
-        );
-    };
-
     _renderCannotTouch = () => {
         return (
             <View style={[styles.cannotTouch]}>
-
             </View>
         );
-    }
+    };
 
     _renderViewForImage = (props) => {
         return (
@@ -176,14 +108,12 @@ export default class extends React.PureComponent {
         );
     };
 
-
     _renderIndicator = (index, size) => {
         return (
             <View>
                 <Text style={styles.indicator}>
                     {index + '/' + size}
                 </Text>
-                {this.props.canDownload && this._renderDownloadButton()}
             </View>
         );
     };
@@ -199,27 +129,6 @@ export default class extends React.PureComponent {
             </View>
         );
     };
-
-    _clickOk = () => {
-        this.props.onClose(this.state.dataSource);
-    };
-
-    _clickDelete = () => {
-        const len = this.state.dataSource.length;
-        if (this.currentIndex < 0 || this.currentIndex >= len) {
-            return;
-        }
-        const items = this.state.dataSource.splice(this.currentIndex, 1);
-        this.currentIndex = this.currentIndex === len - 1 ? len - 2 : this.currentIndex;
-        if (items.length > 0) {
-            this.setState({
-                dataSource: items,
-            });
-        } else {
-            this.props.onClose(items);
-        }
-    };
-
 
     _onChangeIndex = (index) => {
         this.currentIndex = index;
@@ -260,8 +169,8 @@ export default class extends React.PureComponent {
     _renderDownloadClose = () => {
         const {closeIcon} = this.props;
         return (
-            <TouchableOpacity  style={styles.downloadClose} onPress={this._stopDownload }>
-                <View >
+            <TouchableOpacity style={styles.downloadClose} onPress={this._stopDownload}>
+                <View>
                     {closeIcon}
                 </View>
             </TouchableOpacity>
@@ -270,9 +179,9 @@ export default class extends React.PureComponent {
 
 
     _renderDownloadButton = () => {
-        const { clickdButtonIcon, unClickdButtonIcon} = this.props;
+        const {clickdButtonIcon, unClickdButtonIcon} = this.props;
         return (
-            <TouchableOpacity  style={styles.downloadButton} onPress={() => this._downLoadFile()}>
+            <TouchableOpacity style={styles.downloadButton} onPress={() => this._downLoadFile()}>
                 <View>
                     {this.state.isDownloading ? unClickdButtonIcon : clickdButtonIcon}
                 </View>
@@ -281,25 +190,25 @@ export default class extends React.PureComponent {
     };
 
     _downLoadFile = () => {
-        const { images } = this.props;
+        const {images} = this.props;
         const url = images[this.currentIndex];
         this.setState({
             isDownloading: true,
             hasCancel: false
-        })
-        this.props.startDownload(url,(progress) => {
+        });
+        this.props.startDownload(url, (progress) => {
             this.setState({
                 onProgressNum: progress,
             })
-        },(res,path) => {
+        }, (res, path) => {
             !this.state.hasCancel && this._onFinishDownload(path);
-        },() => { //下载失败
+        }, () => { //下载失败
             this.setState({
                 isDownloading: false,
                 onProgressNum: 0
             });
         });
-    }
+    };
 
 
     _onFinishDownload = (path) => {
@@ -308,10 +217,9 @@ export default class extends React.PureComponent {
             onProgressNum: 0,
             showToast: this.props.successDownloadText
         });
-        CameraRoll.saveToCameraRoll(path,'photo').then(() => {
+        CameraRoll.saveToCameraRoll(path, 'photo').then(() => {
             RNFS.unlink(path);
         });
-
     };
 
     _stopDownload = () => {
@@ -321,41 +229,34 @@ export default class extends React.PureComponent {
             showToast: this.props.cancelDownloadText,
             hasCancel: true
         });
-        // RNFS.stopDownload(this.state.jobId);
-        // RNFS.unlink(this.state.path);
         Toast.show(this.props.stopDownload);
     };
 
 
-
     _getCenterStyle = () => {
         const {width, height} = Dimensions.get('window');
-        const inset = getSafeAreaInset();
         const size = 90;
-        const left = (width - inset.left - inset.right - size) / 2.0;
-        const top = (height - DEFAULT_NAVBAR_HEIGHT - inset.bottom - size) / 2.0;
-        const style = {
+        const left = (width - size) / 2.0;
+        const top = (height - size) / 2.0;
+        return {
             width: size,
             height: size,
             left: left,
             top: top,
         };
-        return style;
     };
 
     _getToastCenterStyle = () => {
         const {width, height} = Dimensions.get('window');
-        const inset = getSafeAreaInset();
         const size = 200;
-        const left = (width - inset.left - inset.right - size) / 2.0;
-        const top = (height - DEFAULT_NAVBAR_HEIGHT - inset.bottom - size) / 2.0;
-        const style = {
+        const left = (width - size) / 2.0;
+        const top = (height - size) / 2.0;
+        return {
             width: size,
             height: 50,
             left: left,
             top: top,
         };
-        return style;
     };
 
     _renderToast = () => {
@@ -373,7 +274,7 @@ export default class extends React.PureComponent {
             this.setState({
                 showToast: ''
             })
-        },1000);
+        }, 1000);
     }
 }
 
@@ -381,6 +282,7 @@ const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 const styles = StyleSheet.create({
+    layout: {flex: 1, backgroundColor: 'black'},
     indicator: {
         position: 'absolute',
         bottom: 16,
@@ -403,7 +305,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginTop: 4
     },
-    downloadClose : {
+    downloadClose: {
         position: 'absolute',
         top: 16,
         right: 0,
@@ -431,10 +333,12 @@ const styles = StyleSheet.create({
     },
     downloadButton: {
         position: 'absolute',
-        bottom: 15,
-        right: 0,
-        width: 100,
-        height: 20,
+        bottom: 32,
+        right: 32,
+        width: 36,
+        height: 36,
+        borderRadius: 4,
+        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
     },
