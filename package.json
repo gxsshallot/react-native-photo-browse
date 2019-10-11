@@ -4,17 +4,21 @@
   "private": false,
   "description": "A browser page for multiple local or remote photos.",
   "main": "index.js",
+  "scripts": {
+    "patch": "npm version patch -m 'Bump version %s';git push origin master --tags",
+    "minor": "npm version minor -m 'Bump version %s';git push origin master --tags"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/gaoxiaosong/react-native-photo-browse.git"
+    "url": "https://github.com/hecom-rn/react-native-photo-browse.git"
   },
-  "author": "Xiaosong Gao",
+  "author": "hecom",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/gaoxiaosong/react-native-photo-browse/issues",
-    "email": "gaoxiaosong06@gmail.com"
+    "url": "https://github.com/hecom-rn/react-native-photo-browse/issues",
+    "email": "summer88123@163.com"
   },
-  "homepage": "https://github.com/gaoxiaosong/react-native-photo-browse#readme",
+  "homepage": "https://github.com/hecom-rn/react-native-photo-browse#readme",
   "dependencies": {
     "react-native-image-zoom-viewer": "^2.2.23",
     "react-native-root-siblings": "^3.1.6",

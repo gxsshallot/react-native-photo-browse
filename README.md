@@ -1,6 +1,7 @@
 # react-native-photo-browse
 
 [![npm version](https://img.shields.io/npm/v/react-native-photo-browse.svg?style=flat)](https://www.npmjs.com/package/react-native-photo-browse)
+[![Build Status](https://travis-ci.org/hecom-rn/react-native-photo-browse.svg?branch=master)](https://travis-ci.org/hecom-rn/react-native-photo-browse)
 
 Here is a browser page for multiple local or remote photos.
 
