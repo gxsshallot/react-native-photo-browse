@@ -81,6 +81,7 @@ export default class extends React.PureComponent {
                         onChange={this._onChangeIndex}
                         onCancel={onClose}
                         enableSwipeDown={true}
+                        onClick={() => onClose && onClose()}
                     />
                     {this.props.canDownload && this._renderDownloadButton()}
                     {this.props.canDownload && this.state.isDownloading && this._renderDownloadClose()}
