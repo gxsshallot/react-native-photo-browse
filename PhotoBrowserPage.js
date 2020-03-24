@@ -39,7 +39,8 @@ export default class extends React.PureComponent {
         unClickdButtonIcon: null,
         closeIcon: null,
         startDownload: () => null,
-        cancelDownload: () => null
+        cancelDownload: () => null,
+        getAuthHeader: () => {},
     };
 
     constructor(props) {
@@ -62,7 +63,7 @@ export default class extends React.PureComponent {
     }
 
     render() {
-        const {onClose, supportedOrientations, failImage, images, renderIndicator} = this.props;
+        const {onClose, supportedOrientations, failImage, images, renderIndicator, getAuthHeader} = this.props;
         return (
             <Modal
                 transparent={true}
@@ -74,7 +75,7 @@ export default class extends React.PureComponent {
                     <ImageViewer
                         index={this.currentIndex}
                         failImageSource={failImage}
-                        imageUrls={images.map(url => ({url}))}
+                        imageUrls={images.map(url => ({url, ...getAuthHeader()}))}
                         loadingRender={this._renderLoading}
                         renderImage={this._renderViewForImage}
                         renderIndicator={renderIndicator || this._renderIndicator}
