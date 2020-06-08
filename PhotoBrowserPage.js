@@ -1,5 +1,6 @@
 import React from 'react';
-import { ActivityIndicator, CameraRoll, Dimensions, Image, Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import CameraRoll from '@react-native-community/cameraroll';
 import PropTypes from 'prop-types';
 import Toast from 'react-native-root-toast';
 import ImageViewer from 'react-native-image-zoom-viewer';
