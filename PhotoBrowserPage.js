@@ -26,7 +26,9 @@ export default class extends React.PureComponent {
         unClickdButtonIcon: PropTypes.node,
         closeIcon: PropTypes.node,
         startDownload: PropTypes.func,
-        cancelDownload: PropTypes.func
+        cancelDownload: PropTypes.func,
+        renderIndicator: PropTypes.func,
+        loadingRender: PropTypes.func
     };
 
     static defaultProps = {
@@ -64,7 +66,7 @@ export default class extends React.PureComponent {
     }
 
     render() {
-        const {onClose, supportedOrientations, failImage, images, renderIndicator, getAuthHeader} = this.props;
+        const {onClose, supportedOrientations, failImage, images, renderIndicator, loadingRender, renderImage, getAuthHeader} = this.props;
         return (
             <Modal
                 transparent={true}
@@ -77,8 +79,8 @@ export default class extends React.PureComponent {
                         index={this.currentIndex}
                         failImageSource={failImage}
                         imageUrls={images.map(url => ({url, ...getAuthHeader()}))}
-                        loadingRender={this._renderLoading}
-                        renderImage={this._renderViewForImage}
+                        loadingRender={loadingRender || this._renderLoading}
+                        renderImage={renderImage || this._renderViewForImage}
                         renderIndicator={renderIndicator || this._renderIndicator}
                         onChange={this._onChangeIndex}
                         onCancel={onClose}
@@ -125,7 +127,7 @@ export default class extends React.PureComponent {
         const style = this._getCenterStyle();
         return (
             <View style={[styles.container, style]}>
-                <ActivityIndicator color='white' size='large' />
+                <ActivityIndicator color='white' size='large'/>
                 <Text style={styles.toast}>
                     {this.props.loadingText}
                 </Text>
