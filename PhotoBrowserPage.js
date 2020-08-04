@@ -78,7 +78,7 @@ export default class extends React.PureComponent {
                     <ImageViewer
                         index={this.currentIndex}
                         failImageSource={failImage}
-                        imageUrls={images.map(url => ({url, ...getAuthHeader()}))}
+                        imageUrls={images.map(url => ({url, ...getAuthHeader(url)}))}
                         loadingRender={loadingRender || this._renderLoading}
                         renderImage={renderImage || this._renderViewForImage}
                         renderIndicator={renderIndicator || this._renderIndicator}

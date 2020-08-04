@@ -20,19 +20,17 @@
   },
   "homepage": "https://github.com/hecom-rn/react-native-photo-browse#readme",
   "dependencies": {
-    "react-native-image-zoom-viewer": "^2.2.23",
     "@react-native-community/cameraroll": "^1.2.1",
-    "react-native-fs": "^2.13.3"
+    "react-native-fs": "^2.13.3",
+    "react-native-image-zoom-viewer": "https://github.com/summer88123/react-native-image-viewer.git"
   },
   "peerDependencies": {
-    "react-native-root-siblings": "*",
     "react-native-progress": "*",
+    "react-native-root-siblings": "*",
     "react-native-root-toast": "*"
   },
-
   "devDependencies": {
     "react-native-root-siblings": "^4.0.6",
     "react-native-root-toast": "^3.2.1"
-
   }
 }
