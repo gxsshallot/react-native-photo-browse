@@ -19,18 +19,18 @@
     "email": "summer88123@163.com"
   },
   "homepage": "https://github.com/hecom-rn/react-native-photo-browse#readme",
-  "dependencies": {
-    "@react-native-community/cameraroll": "^1.2.1",
-    "react-native-fs": "^2.13.3",
-    "react-native-image-zoom-viewer": "https://github.com/summer88123/react-native-image-viewer.git"
-  },
   "peerDependencies": {
-    "react-native-progress": "*",
-    "react-native-root-siblings": "*",
-    "react-native-root-toast": "*"
+    "react-native-progress": "^4.1.0",
+    "react-native-root-toast": "^3.2.1",
+    "react-native-image-zoom-viewer": "*",
+    "@react-native-community/cameraroll": ">=1",
+    "react-native-fs": "*"
   },
   "devDependencies": {
     "react-native-root-siblings": "^4.0.6",
-    "react-native-root-toast": "^3.2.1"
+    "react-native-root-toast": "^3.2.1",
+    "react-native-image-zoom-viewer": "^2.2.23",
+    "@react-native-community/cameraroll": "^1.2.1",
+    "react-native-fs": "^2.13.3"
   }
 }
