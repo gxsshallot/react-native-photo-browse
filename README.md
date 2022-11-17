@@ -1,6 +1,7 @@
 # react-native-photo-browse
 
 [![npm version](https://img.shields.io/npm/v/react-native-photo-browse.svg?style=flat)](https://www.npmjs.com/package/react-native-photo-browse)
+[![Build Status](https://travis-ci.org/hecom-rn/react-native-photo-browse.svg?branch=master)](https://travis-ci.org/hecom-rn/react-native-photo-browse)
 
 Here is a browser page for multiple local or remote photos.
 
@@ -53,16 +54,15 @@ func = () => {
 | images | Image urls array to show |
 | failImage | A placeholder image when image is invalid |
 | currentIndex | Initial index of image to show. Default is 0 |
-| canDelete | Enable or disable delete button. Default is false |
-| canSave | Enable or disable save button. Default is false |
-| okLabel | Label of OK button |
-| deleteLabel | Label of Delete button |
-| saveLabel | Label of Save button |
-| saveSuccessText | Save success tips |
-| saveFailureText | Save failure tips |
 | loadingText | Loading tips |
 | onClose | Callback method when close |
 | supportedOrientations | Orientations supported for Modal |
+| successDownloadText | DownLoad and Save success tips  |
+| cancelDownloadText | cancel DownLoad  tips |
+| clickdButtonIcon | clickdButton element |
+| unClickdButtonIcon | unClickdButton element |
+| closeIcon | stop download element |
+| startDownload | to download picture |
 
 ## Global Settings
 
