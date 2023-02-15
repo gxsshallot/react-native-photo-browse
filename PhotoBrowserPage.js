@@ -28,7 +28,10 @@ export default class extends React.PureComponent {
         startDownload: PropTypes.func,
         cancelDownload: PropTypes.func,
         renderIndicator: PropTypes.func,
-        loadingRender: PropTypes.func
+        loadingRender: PropTypes.func,
+        indicatorPosition: 'top' | 'bottom', // 指示器位置
+        onChange: PropTypes.func,
+        describes: PropTypes.array, // footer 描述信息
     };
 
     static defaultProps = {
@@ -66,7 +69,8 @@ export default class extends React.PureComponent {
     }
 
     render() {
-        const {onClose, supportedOrientations, failImage, images, renderIndicator, loadingRender, renderImage, getAuthHeader} = this.props;
+        const { onClose, supportedOrientations, failImage, images, renderIndicator, loadingRender,
+            renderImage, getAuthHeader, indicatorPosition, describes } = this.props;
         return (
             <Modal
                 transparent={true}
@@ -81,11 +85,13 @@ export default class extends React.PureComponent {
                         imageUrls={images.map(url => ({url, ...getAuthHeader(url)}))}
                         loadingRender={loadingRender || this._renderLoading}
                         renderImage={renderImage || this._renderViewForImage}
-                        renderIndicator={renderIndicator || this._renderIndicator}
+                        renderIndicator={renderIndicator ? renderIndicator : indicatorPosition === 'top' ? undefined : this._renderIndicator}
                         onChange={this._onChangeIndex}
                         onCancel={onClose}
                         enableSwipeDown={true}
+                        renderFooter={describes?.length > 0 ? this._renderFooter : undefined}
                         onClick={() => onClose && onClose()}
+                        footerContainerStyle={{ bottom: 74, left: 0, right: 0 }}
                     />
                     {this.props.canDownload && this._renderDownloadButton()}
                     {this.props.canDownload && this.state.isDownloading && this._renderDownloadClose()}
@@ -137,12 +143,22 @@ export default class extends React.PureComponent {
 
     _onChangeIndex = (index) => {
         this.currentIndex = index;
+        this.props.onChange && this.props.onChange(index);
     };
 
     _onWindowChange = () => {
         this.forceUpdate();
     };
 
+    _renderFooter = (index) => {
+        return !!this.props.describes[index] && (
+            <View style={{ alignItems: 'center' }}>
+                <Text style={styles.footerText}>
+                    {this.props.describes[index]}
+                </Text>
+            </View>
+        ) 
+    }
 
     _renderDownloadProgress = () => {
         const style = this._getCenterStyle();
@@ -356,5 +372,15 @@ const styles = StyleSheet.create({
         width: screenWidth,
         height: screenHeight
     },
-
+    footerText: {
+        color: '#fff',
+        fontSize: 13,
+        paddingHorizontal: 6,
+        paddingVertical: 3,
+        backgroundColor: 'rgba(102, 102, 120, 0.35)',
+        borderRadius: 2,
+        textAlign: 'center',
+        overflow: 'hidden'
+    },
 });
+
