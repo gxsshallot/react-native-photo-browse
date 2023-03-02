@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     },
     footerText: {
         color: '#fff',
-        fontSize: 13,
+        fontSize: 15,
         paddingHorizontal: 6,
         paddingVertical: 3,
         backgroundColor: 'rgba(102, 102, 120, 0.35)',
