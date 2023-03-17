@@ -88,6 +88,7 @@ export default class extends React.PureComponent {
                         renderIndicator={renderIndicator ? renderIndicator : indicatorPosition === 'top' ? undefined : this._renderIndicator}
                         onChange={this._onChangeIndex}
                         onCancel={onClose}
+                        doubleClickInterval={500}
                         enableSwipeDown={true}
                         renderFooter={describes?.length > 0 ? this._renderFooter : undefined}
                         onClick={() => onClose && onClose()}
