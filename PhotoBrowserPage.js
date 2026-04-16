@@ -1,9 +1,11 @@
-import React from 'react';
-import { Image, Dimensions, CameraRoll, Modal, StyleSheet, Text, View, Platform, ActivityIndicator } from 'react-native';
+import CameraRoll from '@react-native-community/cameraroll';
 import PropTypes from 'prop-types';
-import Toast from 'react-native-root-toast';
+import React from 'react';
+import { ActivityIndicator, Dimensions, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import RNFS from 'react-native-fs';
 import ImageViewer from 'react-native-image-zoom-viewer';
-import { InnerNaviBar, getSafeAreaInset, DEFAULT_NAVBAR_HEIGHT } from 'react-native-pure-navigation-bar';
+import { Circle } from 'react-native-progress';
+import Toast from 'react-native-root-toast';
 
 export default class extends React.PureComponent {
     static propTypes = {
@@ -14,29 +16,37 @@ export default class extends React.PureComponent {
             PropTypes.shape({uri: PropTypes.string.isRequired})
         ]),
         currentIndex: PropTypes.number,
-        canDelete: PropTypes.bool,
-        canSave: PropTypes.bool,
-        okLabel: PropTypes.string,
-        deleteLabel: PropTypes.string,
-        saveLabel: PropTypes.string,
-        saveSuccessText: PropTypes.string,
-        saveFailureText: PropTypes.string,
         loadingText: PropTypes.string,
         onClose: PropTypes.func,
         supportedOrientations: PropTypes.array,
+        canDownload: PropTypes.bool,
+        successDownloadText: PropTypes.string,
+        cancelDownloadText: PropTypes.string,
+        clickdButtonIcon: PropTypes.node,
+        unClickdButtonIcon: PropTypes.node,
+        closeIcon: PropTypes.node,
+        startDownload: PropTypes.func,
+        cancelDownload: PropTypes.func,
+        renderIndicator: PropTypes.func,
+        loadingRender: PropTypes.func,
+        indicatorPosition: 'top' | 'bottom', // 指示器位置
+        onChange: PropTypes.func,
+        describes: PropTypes.array, // footer 描述信息
     };
 
     static defaultProps = {
         currentIndex: 0,
-        canDelete: false,
-        canSave: false,
-        okLabel: 'OK',
-        deleteLabel: 'Delete',
-        saveLabel: 'Save',
-        saveSuccessText: 'Succeed',
-        saveFailureText: 'Failure',
         loadingText: 'Waiting...',
         supportedOrientations: ["portrait", "landscape"],
+        canDownload: true,
+        successDownloadText: '已保存至相册',
+        cancelDownloadText: '下载已取消',
+        clickdButtonIcon: null,
+        unClickdButtonIcon: null,
+        closeIcon: null,
+        startDownload: () => null,
+        cancelDownload: () => null,
+        getAuthHeader: () => {},
     };
 
     constructor(props) {
@@ -44,19 +54,23 @@ export default class extends React.PureComponent {
         this.currentIndex = props.currentIndex;
         this.state = {
             dataSource: [...props.images],
+            onProgressNum: 0,
+            showToast: '',
+            hasCancel: false
         };
     }
 
     componentDidMount() {
-        Dimensions.addEventListener('change', this._onWindowChange);
+        this.changeEmitter = Dimensions.addEventListener('change', this._onWindowChange);
     }
 
     componentWillUnmount() {
-        Dimensions.removeEventListener('change', this._onWindowChange);
+        this.changeEmitter?.remove();
     }
 
     render() {
-        const { onClose, supportedOrientations } = this.props;
+        const { onClose, supportedOrientations, failImage, images, renderIndicator, loadingRender,
+            renderImage, getAuthHeader, indicatorPosition, describes } = this.props;
         return (
             <Modal
                 transparent={true}
@@ -64,74 +78,35 @@ export default class extends React.PureComponent {
                 onRequestClose={onClose}
                 supportedOrientations={supportedOrientations}
             >
-                {this._renderNaviBar()}
-                {this._renderImageView()}
+                <View style={styles.layout}>
+                    <ImageViewer
+                        index={this.currentIndex}
+                        failImageSource={failImage}
+                        imageUrls={images.map(url => ({url, ...getAuthHeader(url)}))}
+                        loadingRender={loadingRender || this._renderLoading}
+                        renderImage={renderImage || this._renderViewForImage}
+                        renderIndicator={renderIndicator ? renderIndicator : indicatorPosition === 'top' ? undefined : this._renderIndicator}
+                        onChange={this._onChangeIndex}
+                        onCancel={onClose}
+                        doubleClickInterval={500}
+                        enableSwipeDown={true}
+                        renderFooter={describes?.length > 0 ? this._renderFooter : undefined}
+                        onClick={() => onClose && onClose()}
+                        footerContainerStyle={{ bottom: 74, left: 0, right: 0 }}
+                    />
+                    {this.props.canDownload && this._renderDownloadButton()}
+                    {this.props.canDownload && this.state.isDownloading && this._renderDownloadClose()}
+                    {this.props.canDownload && this.state.isDownloading && this._renderDownloadProgress()}
+                    {this.state.showToast !== '' && this._renderToast()}
+                    {this.props.canDownload && this.state.isDownloading && this._renderCannotTouch()}
+                </View>
             </Modal>
         );
     }
 
-    _renderNaviBar = () => {
-        const { canDelete, canSave } = this.props;
-        const items = [];
-        if (canDelete) {
-            items.push({
-                text: this.props.okLabel,
-                onPress: this._clickOk,
-            });
-            items.push({
-                text: this.props.deleteLabel,
-                onPress: this._clickDelete,
-            });
-        }
-        if (canSave) {
-            items.push({
-                text: this.props.saveLabel,
-                onPress: this._clickSave,
-            })
-        }
-        const rights = {};
-        if (items.length > 0) {
-            rights.rightElement = items.map(item => item.text);
-            rights.onRight = (index) => {
-                const item = items[index];
-                item.onPress();
-            };
-        }
+    _renderCannotTouch = () => {
         return (
-            <InnerNaviBar
-                style={{
-                    safeView: {
-                        backgroundColor: 'black',
-                    },
-                }}
-                onLeft={() => {this.props.onClose(); return false;}}
-                hasSeperatorLine={false}
-                {...rights}
-            />
-        );
-    };
-
-    _renderImageView = () => {
-        const { failImage, images } = this.props;
-        const inset = getSafeAreaInset();
-        const style = {
-            flex: 1,
-            backgroundColor: 'black',
-            paddingLeft: inset.left,
-            paddingRight: inset.right,
-            paddingBottom: inset.bottom,
-        };
-        return (
-            <View style={style}>
-                <ImageViewer
-                    index={this.currentIndex}
-                    failImageSource={failImage}
-                    imageUrls={images.map(url => ({url}))}
-                    loadingRender={this._renderLoading}
-                    renderImage={this._renderViewForImage}
-                    renderIndicator={this._renderIndicator}
-                    onChange={this._onChangeIndex}
-                />
+            <View style={[styles.cannotTouch]}>
             </View>
         );
     };
@@ -147,27 +122,19 @@ export default class extends React.PureComponent {
 
     _renderIndicator = (index, size) => {
         return (
-            <Text style={styles.indicator}>
-                {index + '/' + size}
-            </Text>
+            <View>
+                <Text style={styles.indicator}>
+                    {index + '/' + size}
+                </Text>
+            </View>
         );
     };
 
     _renderLoading = () => {
-        const {width, height} = Dimensions.get('window');
-        const inset = getSafeAreaInset();
-        const size = 90;
-        const left = (width - inset.left - inset.right - size) / 2.0;
-        const top = (height - DEFAULT_NAVBAR_HEIGHT - inset.bottom - size) / 2.0;
-        const style = {
-            width: size,
-            height: size,
-            left: left,
-            top: top,
-        };
+        const style = this._getCenterStyle();
         return (
             <View style={[styles.container, style]}>
-                <ActivityIndicator color='white' size='large' />
+                <ActivityIndicator color='white' size='large'/>
                 <Text style={styles.toast}>
                     {this.props.loadingText}
                 </Text>
@@ -175,48 +142,166 @@ export default class extends React.PureComponent {
         );
     };
 
-    _clickOk = () => {
-        this.props.onClose(this.state.dataSource);
-    };
-
-    _clickDelete = () => {
-        const len = this.state.dataSource.length;
-        if (this.currentIndex < 0 || this.currentIndex >= len) {
-            return;
-        }
-        const items = this.state.dataSource.splice(this.currentIndex, 1);
-        this.currentIndex = this.currentIndex === len - 1 ? len - 2 : this.currentIndex;
-        if (items.length > 0) {
-            this.setState({
-                dataSource: items,
-            });
-        } else {
-            this.props.onClose(items);
-        }
-    };
-
-    _clickSave = () => {
-        const url = this.state.dataSource[this.currentIndex];
-        const localUrl = Platform.OS === 'android' ? 'file://' + url : '' + url;
-        CameraRoll.saveToCameraRoll(localUrl, 'photo')
-            .then(() => {
-                Toast.show(this.props.saveSuccessText);
-            })
-            .catch(() => {
-                Toast.show(this.props.saveFailureText);
-            });
-    };
-
     _onChangeIndex = (index) => {
         this.currentIndex = index;
+        this.props.onChange && this.props.onChange(index);
     };
 
     _onWindowChange = () => {
         this.forceUpdate();
     };
+
+    _renderFooter = (index) => {
+        return !!this.props.describes[index] && (
+            <View style={{ alignItems: 'center' }}>
+                <Text style={styles.footerText}>
+                    {this.props.describes[index]}
+                </Text>
+            </View>
+        ) 
+    }
+
+    _renderDownloadProgress = () => {
+        const {onProgressNum} = this.state;
+        return (
+            <View style={styles.downloadProgress}>
+                <View style={styles.progressCard}>
+                    <Circle
+                        size={72}
+                        progress={onProgressNum * 0.01}
+                        unfilledColor="rgba(255,255,255,0.18)"
+                        color="#4FC3F7"
+                        thickness={5}
+                        direction="clockwise"
+                        borderWidth={0}
+                        showsText={true}
+                        formatText={() => `${onProgressNum}%`}
+                        textStyle={styles.progressText}
+                    />
+                    <Text style={styles.progressLabel}>正在下载</Text>
+                </View>
+            </View>
+        );
+    };
+
+
+    _renderDownloadClose = () => {
+        const {closeIcon} = this.props;
+        return (
+            <TouchableOpacity style={styles.downloadClose} onPress={this._stopDownload}>
+                <View>
+                    {closeIcon}
+                </View>
+            </TouchableOpacity>
+        );
+    };
+
+
+    _renderDownloadButton = () => {
+        const {clickdButtonIcon, unClickdButtonIcon} = this.props;
+        return (
+            <TouchableOpacity style={styles.downloadButton} onPress={() => this._downLoadFile()}>
+                <View>
+                    {this.state.isDownloading ? unClickdButtonIcon : clickdButtonIcon}
+                </View>
+            </TouchableOpacity>
+        );
+    };
+
+    _downLoadFile = () => {
+        const {images} = this.props;
+        const url = images[this.currentIndex];
+        this.setState({
+            isDownloading: true,
+            hasCancel: false
+        });
+        this.props.startDownload(url, (progress) => {
+            this.setState({
+                onProgressNum: progress,
+            })
+        }, (res, path) => {
+            !this.state.hasCancel && this._onFinishDownload(path);
+        }, () => { //下载失败
+            this.setState({
+                isDownloading: false,
+                onProgressNum: 0
+            });
+        });
+    };
+
+
+    _onFinishDownload = (path) => {
+        this.setState({
+            isDownloading: false,
+            onProgressNum: 0,
+            showToast: this.props.successDownloadText
+        });
+        CameraRoll.saveToCameraRoll(path, 'photo').then(() => {
+            RNFS.unlink(path);
+        });
+    };
+
+    _stopDownload = () => {
+        this.setState({
+            isDownloading: false,
+            onProgressNum: 0,
+            showToast: this.props.cancelDownloadText,
+            hasCancel: true
+        });
+        Toast.show(this.props.stopDownload);
+    };
+
+
+    _getCenterStyle = () => {
+        const {width, height} = Dimensions.get('window');
+        const size = 90;
+        const left = (width - size) / 2.0;
+        const top = (height - size) / 2.0;
+        return {
+            width: size,
+            height: size,
+            left: left,
+            top: top,
+        };
+    };
+
+    _getToastCenterStyle = () => {
+        const {width, height} = Dimensions.get('window');
+        const size = 200;
+        const left = (width - size) / 2.0;
+        const top = (height - size) / 2.0;
+        return {
+            width: size,
+            height: 50,
+            left: left,
+            top: top,
+        };
+    };
+
+    _renderToast = () => {
+        this._startTime();
+        const style = this._getToastCenterStyle();
+        return (
+            <View style={[styles.toastView, style]}>
+                <Text style={styles.toastText}>{this.state.showToast}</Text>
+            </View>
+        );
+    };
+
+    _startTime = () => {
+        setTimeout(() => {
+            this.setState({
+                showToast: ''
+            })
+        }, 1000);
+    }
 }
 
+const screenWidth = Dimensions.get('window').width;
+const screenHeight = Dimensions.get('window').height;
+
 const styles = StyleSheet.create({
+    layout: {flex: 1, backgroundColor: 'black'},
     indicator: {
         position: 'absolute',
         bottom: 16,
@@ -228,7 +313,6 @@ const styles = StyleSheet.create({
     },
     container: {
         position: 'absolute',
-        backgroundColor: 'transparent',
         zIndex: 99,
         borderRadius: 6,
         backgroundColor: 'rgba(58, 58, 58, 0.9)',
@@ -240,4 +324,84 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginTop: 4
     },
+    downloadClose: {
+        position: 'absolute',
+        top: 16,
+        right: 0,
+        width: 100,
+        height: 100,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 100,
+    },
+    downloadProgress: {
+        ...StyleSheet.absoluteFillObject,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 99,
+    },
+    progressCard: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.72)',
+        borderRadius: 20,
+        paddingVertical: 24,
+        paddingHorizontal: 32,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.45,
+        shadowRadius: 12,
+        elevation: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.08)',
+    },
+    progressLabel: {
+        color: 'rgba(255,255,255,0.75)',
+        fontSize: 13,
+        marginTop: 14,
+        letterSpacing: 1,
+    },
+    toastView: {
+        position: 'absolute',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(58, 58, 58, 0.9)',
+    },
+    toastText: {
+        color: '#fff',
+        fontSize: 14,
+    },
+    downloadButton: {
+        position: 'absolute',
+        bottom: 32,
+        right: 32,
+        width: 36,
+        height: 36,
+        borderRadius: 4,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    progressText: {
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: '600',
+    },
+    cannotTouch: {
+        position: 'absolute',
+        zIndex: 99,
+        width: screenWidth,
+        height: screenHeight
+    },
+    footerText: {
+        color: '#fff',
+        fontSize: 15,
+        paddingHorizontal: 6,
+        paddingVertical: 3,
+        backgroundColor: 'rgba(102, 102, 120, 0.35)',
+        borderRadius: 2,
+        textAlign: 'center',
+        overflow: 'hidden'
+    },
 });
+

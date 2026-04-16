@@ -1,0 +1,21 @@
+language: node_js
+node_js:
+ - "10"
+os:
+ - linux
+
+stages:
+ - test
+ - name: deploy
+   if: tag =~ ^v
+
+jobs:
+ include:
+   - stage: test
+   - stage: deploy
+     deploy:
+       provider: npm
+       email: summer88123@163.com
+       api_key: "$NPM_TOKEN"
+       on:
+         tags: true
