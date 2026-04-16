@@ -1,11 +1,11 @@
-import React from 'react';
-import { ActivityIndicator, Dimensions, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CameraRoll from '@react-native-community/cameraroll';
 import PropTypes from 'prop-types';
-import Toast from 'react-native-root-toast';
+import React from 'react';
+import { ActivityIndicator, Dimensions, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import RNFS from 'react-native-fs';
 import ImageViewer from 'react-native-image-zoom-viewer';
 import { Circle } from 'react-native-progress';
-import RNFS from 'react-native-fs';
+import Toast from 'react-native-root-toast';
 
 export default class extends React.PureComponent {
     static propTypes = {
@@ -162,27 +162,24 @@ export default class extends React.PureComponent {
     }
 
     _renderDownloadProgress = () => {
-        const style = this._getCenterStyle();
         const {onProgressNum} = this.state;
         return (
-            <View style={[styles.downloadProgress, style]}>
-                <Circle
-                    style={{
-                        borderRadius: 42,
-                        width: 84,
-                        height: 84
-                    }}
-                    size={84} // 圆的直径
-                    progress={onProgressNum * 0.01} // 进度
-                    unfilledColor="rgba(255,255,255,0.5)" // 剩余进度的颜色
-                    color={"#008aff"} // 颜色
-                    thickness={6} // 内圆厚度
-                    direction="clockwise" // 方向
-                    borderWidth={0} // 边框
-                    showsText={true}
-                    formatText={() => `${onProgressNum}%`}
-                    textStyle={styles.progressText}
-                />
+            <View style={styles.downloadProgress}>
+                <View style={styles.progressCard}>
+                    <Circle
+                        size={72}
+                        progress={onProgressNum * 0.01}
+                        unfilledColor="rgba(255,255,255,0.18)"
+                        color="#4FC3F7"
+                        thickness={5}
+                        direction="clockwise"
+                        borderWidth={0}
+                        showsText={true}
+                        formatText={() => `${onProgressNum}%`}
+                        textStyle={styles.progressText}
+                    />
+                    <Text style={styles.progressLabel}>正在下载</Text>
+                </View>
             </View>
         );
     };
@@ -338,10 +335,31 @@ const styles = StyleSheet.create({
         zIndex: 100,
     },
     downloadProgress: {
-        position: 'absolute',
-        backgroundColor: 'transparent',
+        ...StyleSheet.absoluteFillObject,
         justifyContent: 'center',
         alignItems: 'center',
+        zIndex: 99,
+    },
+    progressCard: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.72)',
+        borderRadius: 20,
+        paddingVertical: 24,
+        paddingHorizontal: 32,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.45,
+        shadowRadius: 12,
+        elevation: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.08)',
+    },
+    progressLabel: {
+        color: 'rgba(255,255,255,0.75)',
+        fontSize: 13,
+        marginTop: 14,
+        letterSpacing: 1,
     },
     toastView: {
         position: 'absolute',
@@ -365,7 +383,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     progressText: {
-        color: '#000'
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: '600',
     },
     cannotTouch: {
         position: 'absolute',
